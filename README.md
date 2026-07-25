@@ -32,3 +32,4 @@ Alternatif: Vercel CLI ile klasör içinden `vercel` komutunu çalıştırmanız
 
 Bu ek sayfalar için proje büyüdükçe Next.js gibi bir framework'e geçmek isterseniz haber verin, mevcut tasarım dilini koruyarak taşırım.
 # elevate-asansor-site
+# elevate-asansor-site
