@@ -38,6 +38,9 @@ const statObserver = new IntersectionObserver(
 statNums.forEach((el) => statObserver.observe(el))
 
 /* ---------- Reference map: pins + filters + detail panel ---------- */
+/* px/py, haritanın kendi viewBox'ı (0 0 1000 316) içindeki koordinatlar;
+   her şehrin gerçek enlem/boylamından türetildi, bu yüzden pinler
+   Türkiye silüetinin üzerine doğru oturuyor. */
 const projects = [
   {
     id: 1,
@@ -48,8 +51,8 @@ const projects = [
     capacity: '8 Kişi / 630 kg',
     stops: 24,
     year: 2023,
-    x: 27,
-    y: 22,
+    px: 157,
+    py: 52,
   },
   {
     id: 2,
@@ -60,8 +63,8 @@ const projects = [
     capacity: '13 Kişi / 1000 kg',
     stops: 6,
     year: 2022,
-    x: 24,
-    y: 30,
+    px: 174,
+    py: 66,
   },
   {
     id: 3,
@@ -72,8 +75,8 @@ const projects = [
     capacity: '21 Kişi / 1600 kg',
     stops: 9,
     year: 2021,
-    x: 48,
-    y: 34,
+    px: 361,
+    py: 109,
   },
   {
     id: 4,
@@ -84,8 +87,8 @@ const projects = [
     capacity: '10 Kişi / 800 kg',
     stops: 32,
     year: 2023,
-    x: 38,
-    y: 74,
+    px: 248,
+    py: 269,
   },
   {
     id: 5,
@@ -96,8 +99,8 @@ const projects = [
     capacity: 'Yük Asansörü / 2000 kg',
     stops: 4,
     year: 2020,
-    x: 32,
-    y: 24,
+    px: 206,
+    py: 61,
   },
   {
     id: 6,
@@ -108,8 +111,8 @@ const projects = [
     capacity: '6 Kişi / 450 kg',
     stops: 16,
     year: 2024,
-    x: 12,
-    y: 46,
+    px: 60,
+    py: 189,
   },
   {
     id: 7,
@@ -120,8 +123,8 @@ const projects = [
     capacity: '13 Kişi / 1000 kg',
     stops: 5,
     year: 2022,
-    x: 22,
-    y: 32,
+    px: 161,
+    py: 96,
   },
   {
     id: 8,
@@ -132,33 +135,44 @@ const projects = [
     capacity: '21 Kişi / 1600 kg',
     stops: 7,
     year: 2021,
-    x: 78,
-    y: 20,
+    px: 723,
+    py: 53,
   },
 ]
 
-const mapPanel = document.getElementById('mapPanel')
+const SVG_NS = 'http://www.w3.org/2000/svg'
+const pinsLayer = document.getElementById('pinsLayer')
 const mapDetail = document.getElementById('mapDetail')
 const filterBtns = document.querySelectorAll('.filter-btn')
 
 function renderPins() {
-  mapPanel.innerHTML = ''
+  pinsLayer.innerHTML = ''
   projects.forEach((p) => {
-    const pin = document.createElement('div')
-    pin.className = 'map-pin'
-    pin.style.left = p.x + '%'
-    pin.style.top = p.y + '%'
-    pin.dataset.type = p.type
-    pin.dataset.id = p.id
-    pin.innerHTML = `<span class="map-pin-label">${p.city}</span>`
-    pin.addEventListener('click', () => showDetail(p, pin))
-    mapPanel.appendChild(pin)
+    const g = document.createElementNS(SVG_NS, 'g')
+    g.setAttribute('class', 'map-pin-group')
+    g.setAttribute('transform', `translate(${p.px},${p.py})`)
+    g.dataset.type = p.type
+    g.dataset.id = p.id
+
+    const dot = document.createElementNS(SVG_NS, 'circle')
+    dot.setAttribute('class', 'map-pin-dot')
+    dot.setAttribute('r', '7')
+
+    const label = document.createElementNS(SVG_NS, 'text')
+    label.setAttribute('class', 'map-pin-label')
+    label.setAttribute('y', '-14')
+    label.textContent = p.city
+
+    g.appendChild(dot)
+    g.appendChild(label)
+    g.addEventListener('click', () => showDetail(p, g))
+    pinsLayer.appendChild(g)
   })
 }
 
 function showDetail(p, pinEl) {
   document
-    .querySelectorAll('.map-pin')
+    .querySelectorAll('.map-pin-group')
     .forEach((el) => el.classList.remove('active'))
   pinEl.classList.add('active')
   mapDetail.innerHTML = `
@@ -173,7 +187,7 @@ function showDetail(p, pinEl) {
 }
 
 function applyFilter(filter) {
-  document.querySelectorAll('.map-pin').forEach((pin) => {
+  document.querySelectorAll('.map-pin-group').forEach((pin) => {
     pin.classList.toggle(
       'hidden',
       filter !== 'all' && pin.dataset.type !== filter,
